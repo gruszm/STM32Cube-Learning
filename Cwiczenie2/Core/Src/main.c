@@ -36,12 +36,6 @@
 #define LED1 GPIOD, GPIO_PIN_13
 #define LED2 GPIOB, GPIO_PIN_8
 
-#define JOY_RIGHT GPIOE, GPIO_PIN_0
-#define JOY_LEFT GPIOE, GPIO_PIN_1
-#define JOY_UP GPIOE, GPIO_PIN_2
-#define JOY_DOWN GPIOE, GPIO_PIN_3
-#define JOY_PUSH GPIOE, GPIO_PIN_15
-
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -63,6 +57,12 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	/* Do something with the joystick input */
+	HAL_GPIO_TogglePin(LED0); /* Test operation */
+}
 
 /* USER CODE END 0 */
 
@@ -95,31 +95,37 @@ int main(void)
   /* Initialize all configured peripherals */
   /* USER CODE BEGIN 2 */
 
-  GPIO_InitTypeDef gpioInit;
+  GPIO_InitTypeDef gpioInit = {0};
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOE_CLK_ENABLE();
 
   /* GPIOD config */
-  gpioInit.Pin = GPIO_PIN_12 | GPIO_PIN_13;
-  gpioInit.Mode = GPIO_MODE_OUTPUT_PP;
+  gpioInit.Pin   = GPIO_PIN_12 | GPIO_PIN_13;
+  gpioInit.Mode  = GPIO_MODE_OUTPUT_PP;
   gpioInit.Speed = GPIO_SPEED_FREQ_LOW;
-  gpioInit.Pull = GPIO_NOPULL;
+  gpioInit.Pull  = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOD, &gpioInit);
 
   /* GPIOB config */
-  gpioInit.Pin = GPIO_PIN_8;
-  gpioInit.Mode = GPIO_MODE_OUTPUT_PP;
+  gpioInit.Pin   = GPIO_PIN_8;
+  gpioInit.Mode  = GPIO_MODE_OUTPUT_PP;
   gpioInit.Speed = GPIO_SPEED_FREQ_LOW;
-  gpioInit.Pull = GPIO_NOPULL;
+  gpioInit.Pull  = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &gpioInit);
 
   /* GPIOE config */
-  gpioInit.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_15;
-  gpioInit.Mode = GPIO_MODE_INPUT;
+  gpioInit.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_15;
+  gpioInit.Mode  = GPIO_MODE_INPUT;
   gpioInit.Speed = GPIO_SPEED_FREQ_MEDIUM;
-  gpioInit.Pull = GPIO_NOPULL;
+  gpioInit.Pull  = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOE, &gpioInit);
+
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+  HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
+  HAL_NVIC_EnableIRQ(EXTI3_IRQn);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
   /* USER CODE END 2 */
 

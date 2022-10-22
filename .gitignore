@@ -4,3 +4,4 @@
 !.gitignore
 !Cwiczenie1/Core/Src/main.c
 !Cwiczenie2/Core/Src/main.c
+!Cwiczenie2/Core/Src/stm32l4xx_it.c
