@@ -36,15 +36,24 @@
 
 #define JOY_PORT_RIGHT GPIO_PIN_0
 #define JOY_PORT_LEFT GPIO_PIN_1
-#define JOY_PORT_UP GPIO_PIN_2
-#define JOY_PORT_DOWN GPIO_PIN_3
+#define JOY_PORT_UP GPIO_PIN_3
+#define JOY_PORT_DOWN GPIO_PIN_2
 #define JOY_PORT_PUSH GPIO_PIN_15
 
-#define JOY_LEFT_ACTIVE ((~(GPIOE->IDR) & JOY_PORT_LEFT) ? 1 : 0)
-#define JOY_RIGHT_ACTIVE ((~(GPIOE->IDR) & JOY_PORT_RIGHT) ? 1 : 0)
-#define JOY_UP_ACTIVE ((~(GPIOE->IDR) & JOY_PORT_UP) ? 1 : 0)
-#define JOY_DOWN_ACTIVE ((~(GPIOE->IDR) & JOY_PORT_DOWN) ? 1 : 0)
-#define JOY_PUSH_ACTIVE ((~(GPIOE->IDR) & JOY_PORT_PUSH) ? 1 : 0)
+#define JOY_LEFT_STATE ((~(GPIOE->IDR) & JOY_PORT_LEFT) ? 1 : 0)
+#define JOY_RIGHT_STATE ((~(GPIOE->IDR) & JOY_PORT_RIGHT) ? 1 : 0)
+#define JOY_UP_STATE ((~(GPIOE->IDR) & JOY_PORT_UP) ? 1 : 0)
+#define JOY_DOWN_STATE ((~(GPIOE->IDR) & JOY_PORT_DOWN) ? 1 : 0)
+#define JOY_PUSH_STATE ((~(GPIOE->IDR) & JOY_PORT_PUSH) ? 1 : 0)
+
+#define LED0 GPIOD, GPIO_PIN_12
+#define LED1 GPIOD, GPIO_PIN_13
+#define LED2 GPIOB, GPIO_PIN_8
+
+#define FREQ 50U // 50 Hz
+#define DELAY 20U // 20 ms
+#define NUMBER_OF_LEDS 3U
+#define MAX_LED_LEVEL DELAY
 
 /* USER CODE END PD */
 
@@ -56,6 +65,10 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
 
+uint8_t counter_u8 = 0U;
+uint8_t ledLevels_au8[NUMBER_OF_LEDS] = {0U};
+uint8_t currentLed_u8 = 0U;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -65,31 +78,6 @@
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-void EXTI0_IRQHandler(void)
-{
-	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
-}
-
-void EXTI1_IRQHandler(void)
-{
-	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
-}
-
-void EXTI2_IRQHandler(void)
-{
-	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_2);
-}
-
-void EXTI3_IRQHandler(void)
-{
-	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_3);
-}
-
-void EXTI15_10_IRQHandler(void)
-{
-	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_15);
-}
 
 /* USER CODE END 0 */
 
@@ -225,16 +213,123 @@ void SysTick_Handler(void)
 
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
-  HAL_SYSTICK_IRQHandler();
-
-  /* If it does not work, try uncommenting this section */
-//  EXTI0_IRQHandler();
-//  EXTI1_IRQHandler();
-//  EXTI2_IRQHandler();
-//  EXTI3_IRQHandler();
-//  EXTI15_10_IRQHandler();
-
   /* USER CODE BEGIN SysTick_IRQn 1 */
+
+  static uint8_t prevCycleLeftJoy_u8 = 0U;
+  static uint8_t prevCycleRightJoy_u8 = 0U;
+
+  if (DELAY == counter_u8)
+  {
+	  if (JOY_UP_STATE)
+	  {
+		  if (ledLevels_au8[currentLed_u8] < MAX_LED_LEVEL)
+		  {
+			  ledLevels_au8[currentLed_u8] += 1U;
+		  }
+		  else
+		  {
+			  ledLevels_au8[currentLed_u8] = MAX_LED_LEVEL;
+		  }
+
+		  prevCycleLeftJoy_u8 = 0U;
+		  prevCycleRightJoy_u8 = 0U;
+	  }
+	  else if (JOY_DOWN_STATE)
+	  {
+		  if (ledLevels_au8[currentLed_u8] > 0U)
+		  {
+			  ledLevels_au8[currentLed_u8] -= 1U;
+		  }
+		  else
+		  {
+			  ledLevels_au8[currentLed_u8] = 0U;
+		  }
+
+		  prevCycleLeftJoy_u8 = 0U;
+		  prevCycleRightJoy_u8 = 0U;
+	  }
+	  else if (JOY_LEFT_STATE)
+	  {
+		  if (0U == prevCycleLeftJoy_u8)
+		  {
+			  if (currentLed_u8 > 0U)
+			  {
+				  currentLed_u8--;
+			  }
+			  else
+			  {
+				  currentLed_u8 = NUMBER_OF_LEDS - 1U;
+			  }
+		  }
+
+		  prevCycleLeftJoy_u8 = 1U;
+		  prevCycleRightJoy_u8 = 0U;
+	  }
+	  else if (JOY_RIGHT_STATE)
+	  {
+		  if (0U == prevCycleRightJoy_u8)
+		  {
+			  if (currentLed_u8 < (NUMBER_OF_LEDS - 1U))
+			  {
+			      currentLed_u8++;
+			  }
+			  else
+			  {
+				  currentLed_u8 = 0U;
+			  }
+		  }
+
+		  prevCycleLeftJoy_u8 = 0U;
+		  prevCycleRightJoy_u8 = 1U;
+	  }
+	  else if (JOY_PUSH_STATE)
+	  {
+		  ledLevels_au8[0U] = 0U;
+		  ledLevels_au8[1U] = 0U;
+		  ledLevels_au8[2U] = 0U;
+
+		  prevCycleLeftJoy_u8 = 0U;
+		  prevCycleRightJoy_u8 = 0U;
+	  }
+	  else
+	  {
+		  prevCycleLeftJoy_u8 = 0U;
+		  prevCycleRightJoy_u8 = 0U;
+	  }
+
+	  counter_u8 = 0U;
+  }
+  else
+  {
+	  counter_u8++;
+  }
+
+  if (counter_u8 < ledLevels_au8[0U])
+  {
+	  HAL_GPIO_WritePin(LED0, GPIO_PIN_SET);
+  }
+  else
+  {
+	  HAL_GPIO_WritePin(LED0, GPIO_PIN_RESET);
+  }
+
+  if (counter_u8 < ledLevels_au8[1U])
+  {
+	  HAL_GPIO_WritePin(LED1, GPIO_PIN_SET);
+  }
+  else
+  {
+	  HAL_GPIO_WritePin(LED1, GPIO_PIN_RESET);
+  }
+
+  if (counter_u8 < ledLevels_au8[2U])
+  {
+	  HAL_GPIO_WritePin(LED2, GPIO_PIN_SET);
+  }
+  else
+  {
+	  HAL_GPIO_WritePin(LED2, GPIO_PIN_RESET);
+  }
 
   /* USER CODE END SysTick_IRQn 1 */
 }

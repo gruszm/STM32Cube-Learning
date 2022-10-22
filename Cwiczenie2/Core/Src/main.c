@@ -32,9 +32,7 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
-#define LED0 GPIOD, GPIO_PIN_12
-#define LED1 GPIOD, GPIO_PIN_13
-#define LED2 GPIOB, GPIO_PIN_8
+
 
 /* USER CODE END PD */
 
@@ -57,12 +55,6 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-	/* Do something with the joystick input */
-	HAL_GPIO_TogglePin(LED0); /* Test operation */
-}
 
 /* USER CODE END 0 */
 
@@ -120,12 +112,6 @@ int main(void)
   gpioInit.Speed = GPIO_SPEED_FREQ_MEDIUM;
   gpioInit.Pull  = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOE, &gpioInit);
-
-  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
-  HAL_NVIC_EnableIRQ(EXTI1_IRQn);
-  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
-  HAL_NVIC_EnableIRQ(EXTI3_IRQn);
-  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
   /* USER CODE END 2 */
 
