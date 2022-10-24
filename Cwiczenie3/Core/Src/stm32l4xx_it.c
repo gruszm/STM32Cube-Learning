@@ -64,6 +64,8 @@ typedef enum
 
 #define RESET_SEG 8U
 
+#define RIGHT_DOT_BLINK_INTERVAL 2000U
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -88,10 +90,10 @@ const uint8_t segments_au8[] = {
 };
 
 uint16_t miliseconds_u16 = 0U;
+uint16_t dotBlinkCounter_u16 = 0U;
 uint8_t seconds_u8 = 0U;
 uint8_t minutes_u8 = 0U;
 uint8_t hours_u8 = 0U;
-
 ClockModeType clockMode_e = MINUTES_SECONDS;
 
 /* USER CODE END PV */
@@ -281,6 +283,14 @@ void SysTick_Handler(void)
 		  else
 		  {
 			  clockMode_e = MINUTES_SECONDS;
+
+			  /* On switching to minutes:seconds, right dot should be switched off
+			   * and the counter should be reset. */
+			  HAL_GPIO_WritePin(DIG_4, GPIO_PIN_SET);
+		      HAL_GPIO_WritePin(GPIOG, GPIO_PIN_9, GPIO_PIN_RESET);
+			  HAL_GPIO_WritePin(DIG_4, GPIO_PIN_RESET);
+
+			  dotBlinkCounter_u16 = 0U;
 		  }
 
 		  previousCycleJoyPush_u8 = 1U;
@@ -323,6 +333,7 @@ void SysTick_Handler(void)
 
 	  HAL_GPIO_WritePin(DIG_2, GPIO_PIN_SET);
 	  HAL_GPIO_WritePin(GPIOG, segments_au8[minutesDigit2_u8], GPIO_PIN_SET);
+	  HAL_GPIO_WritePin(GPIOG, GPIO_PIN_9, GPIO_PIN_SET);
 	  HAL_GPIO_WritePin(DIG_2, GPIO_PIN_RESET);
 
 	  // Digit 3
@@ -339,6 +350,7 @@ void SysTick_Handler(void)
 	  HAL_GPIO_WritePin(GPIOG, segments_au8[secondsDigit2_u8], GPIO_PIN_SET);
 	  HAL_GPIO_WritePin(DIG_4, GPIO_PIN_RESET);
   }
+  /* hours:minutes */
   else if (HOURS_MINUTES == clockMode_e)
   {
 	  // Digit 1
@@ -353,6 +365,7 @@ void SysTick_Handler(void)
 
 	  HAL_GPIO_WritePin(DIG_2, GPIO_PIN_SET);
 	  HAL_GPIO_WritePin(GPIOG, segments_au8[hoursDigit2_u8], GPIO_PIN_SET);
+	  HAL_GPIO_WritePin(GPIOG, GPIO_PIN_9, GPIO_PIN_SET);
 	  HAL_GPIO_WritePin(DIG_2, GPIO_PIN_RESET);
 
 	  // Digit 3
@@ -367,7 +380,25 @@ void SysTick_Handler(void)
 
 	  HAL_GPIO_WritePin(DIG_4, GPIO_PIN_SET);
 	  HAL_GPIO_WritePin(GPIOG, segments_au8[minutesDigit2_u8], GPIO_PIN_SET);
+
+	  /* Right dot shall blink */
+	  if (dotBlinkCounter_u16 < (RIGHT_DOT_BLINK_INTERVAL / 2U))
+	  {
+		  HAL_GPIO_WritePin(GPIOG, GPIO_PIN_9, GPIO_PIN_SET);
+	  }
+	  else
+	  {
+		  HAL_GPIO_WritePin(GPIOG, GPIO_PIN_9, GPIO_PIN_RESET);
+	  }
+
 	  HAL_GPIO_WritePin(DIG_4, GPIO_PIN_RESET);
+  }
+
+  dotBlinkCounter_u16++;
+
+  if (dotBlinkCounter_u16 > RIGHT_DOT_BLINK_INTERVAL)
+  {
+	  dotBlinkCounter_u16 = 0U;
   }
 
   /* USER CODE END SysTick_IRQn 1 */
