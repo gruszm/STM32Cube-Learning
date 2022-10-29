@@ -129,8 +129,12 @@ static void updateDigits(void)
 
 	specificAccValue_f32 = correctedAccValues_f32[accState_e];
 
-	digitValue_u32 = (uint32_t)specificAccValue_f32;
-	digits_au8[1U] = segments_au8[digitValue_u32];
+	/* Due to safety reasons, check if the acceleration is below 10.0F */
+	if (specificAccValue_f32 < 10.0F)
+	{
+		digitValue_u32 = (uint32_t)specificAccValue_f32;
+		digits_au8[1U] = segments_au8[digitValue_u32];
+	}
 
 	specificAccValue_f32 *= 10.0F;
 
@@ -139,7 +143,7 @@ static void updateDigits(void)
 
 	specificAccValue_f32 *= 10.0F;
 
-	digitValue_u32 = ((uint32_t)specificAccValue_f32) % 100U;
+	digitValue_u32 = ((uint32_t)specificAccValue_f32) % 10U;
 	digits_au8[3U] = segments_au8[digitValue_u32];
 }
 
