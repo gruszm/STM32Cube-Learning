@@ -21,6 +21,7 @@
 #include "main.h"
 #include "stm32l4xx_it.h"
 #include "kamami_l496_mems.h"
+#include "math.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
@@ -100,7 +101,7 @@ static uint8_t digits_au8[NUMBER_OF_DIGITS] = {0U};
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
 
-static void updateDigits(void)
+static void UpdateDigits(void)
 {
 	struct mems_xyz_res acc;
 	float correctedAccValues_f32[3U] = {0.0F};
@@ -109,9 +110,9 @@ static void updateDigits(void)
 
 	mems_acc_read_xyz(&acc);
 
-	correctedAccValues_f32[0U] = (float)acc.x * 2.0F / MEMS_ACC_MAXVAL;
-    correctedAccValues_f32[1U] = (float)acc.y * 2.0F / MEMS_ACC_MAXVAL;
-	correctedAccValues_f32[2U] = (float)acc.z * 2.0F / MEMS_ACC_MAXVAL;
+	correctedAccValues_f32[0U] = fabsf((float)acc.x * 2.0F / MEMS_ACC_MAXVAL);
+    correctedAccValues_f32[1U] = fabsf((float)acc.y * 2.0F / MEMS_ACC_MAXVAL);
+	correctedAccValues_f32[2U] = fabsf((float)acc.z * 2.0F / MEMS_ACC_MAXVAL);
 
 	switch (accState_e)
 	{
@@ -315,8 +316,6 @@ void SysTick_Handler(void)
 	  previousCycleJoyPush_u8 = 0U;
   }
 
-  updateDigits();
-
   // Digit 1
   if (0U == currentDigit_u8)
   {
@@ -352,6 +351,8 @@ void SysTick_Handler(void)
 	  HAL_GPIO_WritePin(SEGMENT_GPIO_PORT, digits_au8[3U], GPIO_PIN_SET);
 	  HAL_GPIO_WritePin(DIGIT_GPIO_PORT, DIGIT_4_PIN, GPIO_PIN_SET);
   }
+
+  UpdateDigits();
 
   currentDigit_u8++;
   if (currentDigit_u8 >= NUMBER_OF_DIGITS)
